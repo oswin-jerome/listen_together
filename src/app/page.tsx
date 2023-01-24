@@ -1,91 +1,63 @@
-import Image from 'next/image'
-import { Inter } from '@next/font/google'
-import styles from './page.module.css'
-
-const inter = Inter({ subsets: ['latin'] })
+"use client";
+import Image from "next/image";
+import { Inter } from "@next/font/google";
+import styles from "./page.module.css";
+import { useEffect, useState } from "react";
+import YouTube, { YouTubeProps } from "react-youtube";
+import Pusher from "pusher-js";
+const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
+  var pusher: any;
+  Pusher.logToConsole = true;
+
+  pusher = new Pusher("c2af354409b506f59ad3", {
+    cluster: "mt1",
+  });
+
+  var channel = pusher.subscribe("my-channel");
+  channel.bind("my-event", function (data: any) {
+    // alert(JSON.stringify(data.message));
+    setVideo(data.message);
+  });
+
+  channel.bind("my-pause", function (data: any) {
+    target.pauseVideo();
+  });
+
+  // useEffect(() => {}, []);
+  const [vid, setVid] = useState("2g811Eo7K8U");
+  const [video, setVideo] = useState("2g811Eo7K8U");
+  var target: any;
+  const onPlayerReady: YouTubeProps["onReady"] = (event) => {
+    // access to player in all event handlers via event.target
+    target = event.target;
+  };
+
+  const youtube_parser = (url: string) => {
+    var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+    var match = url.match(regExp);
+    return match && match[7].length == 11 ? match[7] : false;
+  };
+
   return (
     <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-        <div className={styles.thirteen}>
-          <Image src="/thirteen.svg" alt="13" width={40} height={31} priority />
-        </div>
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+      <input type="text" value={vid} onChange={(e) => setVid(e.target.value)} />
+      <button
+        onClick={() => {
+          fetch("/api/hello?id=" + youtube_parser(vid));
+        }}
+      >
+        Pause
+      </button>
+      <YouTube
+        videoId={video}
+        onPause={() => {}}
+        opts={{
+          playerVars: { autoplay: 1 },
+        }}
+        onReady={onPlayerReady}
+      />
     </main>
-  )
+  );
 }
